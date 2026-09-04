@@ -26,11 +26,15 @@ export const COLORS = {
   woodFaintStroke: '#b08d5a',
   glass: '#d6eaf8',
   glassStroke: '#8bb8d9',
+  steel: '#a8b0ba',
+  steelStroke: '#4b5563',
+  steelFaint: '#cdd3da',
+  steelFaintStroke: '#8a94a0',
   ink: '#1f2937',
   dim: '#b91c1c',
 };
 
-export type Kind = 'wood' | 'woodFaint' | 'glass' | 'outline' | 'ground' | 'dim' | 'tick';
+export type Kind = 'wood' | 'woodFaint' | 'steel' | 'steelFaint' | 'glass' | 'outline' | 'ground' | 'dim' | 'tick';
 
 function style(c: DrawCtx, kind: Kind): SVGAttributes<SVGElement> {
   switch (kind) {
@@ -38,6 +42,10 @@ function style(c: DrawCtx, kind: Kind): SVGAttributes<SVGElement> {
       return { fill: COLORS.wood, stroke: COLORS.woodStroke, strokeWidth: f(c.sw) };
     case 'woodFaint':
       return { fill: COLORS.woodFaint, stroke: COLORS.woodFaintStroke, strokeWidth: f(c.sw) };
+    case 'steel':
+      return { fill: COLORS.steel, stroke: COLORS.steelStroke, strokeWidth: f(c.sw * 0.8) };
+    case 'steelFaint':
+      return { fill: COLORS.steelFaint, stroke: COLORS.steelFaintStroke, strokeWidth: f(c.sw * 0.8) };
     case 'glass':
       return { fill: COLORS.glass, stroke: COLORS.glassStroke, strokeWidth: f(c.sw * 0.6) };
     case 'outline':

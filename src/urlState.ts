@@ -1,14 +1,16 @@
 import {
-  DEFAULT_PARAMS, LENGTH_MAX, LENGTH_MIN, RIDGE_MAX, RIDGE_MIN, WIDTH_MAX, WIDTH_MIN,
-  clamp, snap, type Params,
+  BRACINGS, DEFAULT_PARAMS, LENGTH_MAX, LENGTH_MIN, RIDGE_MAX, RIDGE_MIN, WIDTH_MAX, WIDTH_MIN,
+  clamp, snap, type Bracing, type Params,
 } from './model';
 
 const KEYS = {
   width: 'bredde',
   length: 'lengde',
   ridge: 'mone',
+  bracing: 'avstivning',
   glassPrice: 'glass',
   woodPrice: 'virke',
+  bandPrice: 'band',
   showPrice: 'pris',
 } as const;
 
@@ -28,10 +30,14 @@ export function paramsFromSearch(search: string): Params {
   if (length !== null) p.length = clamp(snap(length), LENGTH_MIN, LENGTH_MAX);
   const ridge = num(KEYS.ridge);
   if (ridge !== null) p.ridge = clamp(Math.round(ridge), RIDGE_MIN, RIDGE_MAX);
+  const bracing = q.get(KEYS.bracing)?.trim().toLowerCase();
+  if (bracing !== undefined && (BRACINGS as readonly string[]).includes(bracing)) p.bracing = bracing as Bracing;
   const glass = num(KEYS.glassPrice);
   if (glass !== null) p.glassPrice = Math.max(0, glass);
   const wood = num(KEYS.woodPrice);
   if (wood !== null) p.woodPrice = Math.max(0, wood);
+  const band = num(KEYS.bandPrice);
+  if (band !== null) p.bandPrice = Math.max(0, band);
   const showPrice = q.get(KEYS.showPrice);
   if (showPrice !== null) p.showPrice = !['0', 'false', 'nei'].includes(showPrice.trim().toLowerCase());
   return p;
@@ -42,8 +48,10 @@ export function searchFromParams(p: Params): string {
   q.set(KEYS.width, String(p.width));
   q.set(KEYS.length, String(p.length));
   q.set(KEYS.ridge, String(p.ridge));
+  q.set(KEYS.bracing, p.bracing);
   q.set(KEYS.glassPrice, String(p.glassPrice));
   q.set(KEYS.woodPrice, String(p.woodPrice));
+  q.set(KEYS.bandPrice, String(p.bandPrice));
   q.set(KEYS.showPrice, p.showPrice ? '1' : '0');
   return `?${q.toString()}`;
 }

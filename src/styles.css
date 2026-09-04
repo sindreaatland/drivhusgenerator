@@ -125,6 +125,14 @@ input[type='number'] {
   accent-color: var(--accent);
 }
 
+.choices .check {
+  margin-bottom: 8px;
+}
+
+.choices + .hint {
+  margin-top: 0;
+}
+
 .button {
   display: inline-block;
   width: 100%;

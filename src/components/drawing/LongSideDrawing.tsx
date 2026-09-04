@@ -1,8 +1,12 @@
-import { BAY, STUD_D, STUD_W, WALL_H, studSpan, type Model } from '../../model';
-import { COLORS, DimH, DimV, Line, Rect, Text, f, makeCtx } from './svg';
+import { BAY, STUD_D, STUD_W, WALL_H, bracePoly, studSpan, type Model } from '../../model';
+import { COLORS, DimH, DimV, Line, Poly, Rect, Text, f, makeCtx } from './svg';
 
 export function LongSideDrawing({ m }: { m: Model }) {
-  const { L, ridge, nL, tv, rise, angle, roofPieces } = m;
+  const { L, ridge, nL, tv, rise, angle, roofPieces, bracing, braceW, wallBracesLong, roofBraces, roofBraceDepth } = m;
+  const braceKind = bracing === 'stal' ? 'steel' : 'wood';
+  const roofBraceKind = bracing === 'stal' ? 'steelFaint' : 'woodFaint';
+  // Avstivning i takplanet projisert i høyde sett fra siden
+  const roofY = (s: number) => WALL_H + s * Math.sin(angle) - roofBraceDepth * Math.cos(angle);
   const k = Math.max(L / 70, ridge / 40);
   const c = makeCtx(k);
   const padL = 8 * k;
@@ -30,6 +34,14 @@ export function LongSideDrawing({ m }: { m: Model }) {
       ))}
       {/* mønebjelke sett gjennom takglasset */}
       <Rect c={c} x={0} y={ridge - tv - STUD_D} w={L} h={STUD_D} kind="woodFaint" />
+      {/* vindavstivning i takplanet, under sperrene, sett gjennom takglasset */}
+      {roofBraces.map((br, i) => (
+        <Poly key={i} c={c} pts={bracePoly(br, braceW).map(([x, s]): [number, number] => [x, roofY(s)])} kind={roofBraceKind} />
+      ))}
+      {/* vindavstivning i veggen, innfelt i stenderne */}
+      {wallBracesLong.map((br, i) => (
+        <Poly key={i} c={c} pts={bracePoly(br, braceW)} kind={braceKind} />
+      ))}
       {/* stendere og sperrer c/c 60 */}
       {studs.map(([x0, x1], i) => (
         <g key={i}>

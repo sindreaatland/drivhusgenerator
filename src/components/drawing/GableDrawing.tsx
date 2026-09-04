@@ -1,8 +1,9 @@
-import { BAY, STUD_D, STUD_W, WALL_H, gableStudTops, n0, n1, studSpan, type Model } from '../../model';
+import { BAY, STUD_D, STUD_W, WALL_H, bracePoly, gableStudTops, n0, n1, studSpan, type Model } from '../../model';
 import { COLORS, DimAlong, DimH, DimV, Line, Poly, Rect, Text, f, makeCtx } from './svg';
 
 export function GableDrawing({ m }: { m: Model }) {
-  const { W, ridge, nW, halfW, rise, tv, seatX, angle, angleDeg, slopeLen, roofPieces, roofTop } = m;
+  const { W, ridge, nW, halfW, rise, tv, seatX, angle, angleDeg, slopeLen, roofPieces, roofTop, bracing, braceW, wallBracesGable } = m;
+  const braceKind = bracing === 'stal' ? 'steel' : 'wood';
   const k = Math.max(W / 70, ridge / 40);
   const c = makeCtx(k);
   const padL = 8 * k;
@@ -30,9 +31,13 @@ export function GableDrawing({ m }: { m: Model }) {
       />
       {/* bunnsvill */}
       <Rect c={c} x={0} y={0} w={W} h={STUD_W} kind="wood" />
-      {/* hjørnestendere fra langveggene og toppsvill sett fra enden */}
-      <Rect c={c} x={0} y={STUD_W} w={STUD_W} h={WALL_H - 2 * STUD_W} kind="wood" />
-      <Rect c={c} x={W - STUD_W} y={STUD_W} w={STUD_W} h={WALL_H - 2 * STUD_W} kind="wood" />
+      {/* vindavstivning i gavlen, innfelt i stenderne */}
+      {wallBracesGable.map((br, i) => (
+        <Poly key={i} c={c} pts={bracePoly(br, braceW)} kind={braceKind} />
+      ))}
+      {/* hjørnestendere fra langveggene (98 dype sett fra enden) og toppsvill sett fra enden */}
+      <Rect c={c} x={0} y={STUD_W} w={STUD_D} h={WALL_H - 2 * STUD_W} kind="wood" />
+      <Rect c={c} x={W - STUD_D} y={STUD_W} w={STUD_D} h={WALL_H - 2 * STUD_W} kind="wood" />
       <Rect c={c} x={0} y={WALL_H - STUD_W} w={STUD_D} h={STUD_W} kind="wood" />
       <Rect c={c} x={W - STUD_D} y={WALL_H - STUD_W} w={STUD_D} h={STUD_W} kind="wood" />
       {/* gavlstendere c/c 60 opp til sperre */}

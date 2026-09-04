@@ -2,22 +2,44 @@ import { useEffect, useMemo, useRef } from 'react';
 import { Canvas, useThree } from '@react-three/fiber';
 import { Edges, OrbitControls } from '@react-three/drei';
 import * as THREE from 'three';
-import { STUD_D, STUD_W, WALL_H, gableStudTops, studSpan, type Model } from '../model';
+import { STUD_D, STUD_W, WALL_H, braceEnds, gableStudTops, studSpan, type Model } from '../model';
 
 // Akser: X langs lengden (0..L), Y opp, Z langs bredden (0..W).
 type V3 = [number, number, number];
+type Quat = [number, number, number, number];
+type BeamKind = 'wood' | 'steel';
 
 interface BeamSpec {
   size: V3;
   position: V3;
-  rotationX?: number;
+  quat?: Quat;
+  kind?: BeamKind;
 }
 
-function Beam({ size, position, rotationX = 0, material }: BeamSpec & { material: THREE.Material }) {
+const EDGE: Record<BeamKind, string> = { wood: '#6b4a1c', steel: '#374151' };
+const IDENTITY: Quat = [0, 0, 0, 1];
+
+const quatX = (a: number): Quat => new THREE.Quaternion().setFromEuler(new THREE.Euler(a, 0, 0)).toArray() as Quat;
+
+/** Boks med lengden langs p1→p2, tykkelse t langs normalen n og bredde w i planet. */
+function diagonal(p1: V3, p2: V3, n: V3, t: number, w: number, kind: BeamKind): BeamSpec {
+  const a = new THREE.Vector3(...p1);
+  const b = new THREE.Vector3(...p2);
+  const u = b.clone().sub(a);
+  const len = u.length();
+  u.normalize();
+  const nn = new THREE.Vector3(...n).normalize();
+  const v = u.clone().cross(nn);
+  const q = new THREE.Quaternion().setFromRotationMatrix(new THREE.Matrix4().makeBasis(u, nn, v));
+  const c = a.clone().add(b).multiplyScalar(0.5);
+  return { size: [len, t, w], position: [c.x, c.y, c.z], quat: q.toArray() as Quat, kind };
+}
+
+function Beam({ size, position, quat = IDENTITY, kind = 'wood', material }: BeamSpec & { material: THREE.Material }) {
   return (
-    <mesh position={position} rotation={[rotationX, 0, 0]} material={material}>
+    <mesh position={position} quaternion={quat} material={material}>
       <boxGeometry args={size} />
-      <Edges color="#6b4a1c" />
+      <Edges color={EDGE[kind]} />
     </mesh>
   );
 }
@@ -63,8 +85,38 @@ function beams(m: Model): BeamSpec[] {
   for (let i = 0; i <= nL; i++) {
     const [x0, x1] = studSpan(i, nL, L);
     const cx = (x0 + x1) / 2;
-    out.push({ size: [STUD_W, STUD_D, slopeLen], position: [cx, my - (dz * STUD_D) / 2, mz + (dy * STUD_D) / 2], rotationX: -angle });
-    out.push({ size: [STUD_W, STUD_D, slopeLen], position: [cx, my - (dz * STUD_D) / 2, W - mz - (dy * STUD_D) / 2], rotationX: angle });
+    out.push({ size: [STUD_W, STUD_D, slopeLen], position: [cx, my - (dz * STUD_D) / 2, mz + (dy * STUD_D) / 2], quat: quatX(-angle) });
+    out.push({ size: [STUD_W, STUD_D, slopeLen], position: [cx, my - (dz * STUD_D) / 2, W - mz - (dy * STUD_D) / 2], quat: quatX(angle) });
+  }
+
+  // Vindavstivning. Skråstag felles inn fra innsiden av stendere og sperrer; stålbånd spikres på innsiden/undersiden.
+  if (m.bracing !== 'ingen') {
+    const kind: BeamKind = m.bracing === 'stal' ? 'steel' : 'wood';
+    const { braceW: w, braceT: t } = m;
+    const inset = m.bracing === 'stal' ? STUD_D + t / 2 : STUD_D - t / 2; // senter målt fra veggens utside
+    for (const br of m.wallBracesLong) {
+      const [[xa, ya], [xb, yb]] = braceEnds(br, w);
+      out.push(diagonal([xa, ya, inset], [xb, yb, inset], [0, 0, 1], t, w, kind));
+      out.push(diagonal([xa, ya, W - inset], [xb, yb, W - inset], [0, 0, -1], t, w, kind));
+    }
+    for (const br of m.wallBracesGable) {
+      const [[za, ya], [zb, yb]] = braceEnds(br, w);
+      out.push(diagonal([inset, ya, za], [inset, yb, zb], [1, 0, 0], t, w, kind));
+      out.push(diagonal([L - inset, ya, za], [L - inset, yb, zb], [-1, 0, 0], t, w, kind));
+    }
+    // Takplanet: (x, s) med s langs takfallet fra raften, senter roofBraceDepth under overkant tak
+    const d = m.roofBraceDepth;
+    const sin = Math.sin(angle);
+    const cos = Math.cos(angle);
+    const roofPt = (x: number, s: number, far: boolean): V3 => {
+      const z = s * cos + d * sin;
+      return [x, WALL_H + s * sin - d * cos, far ? W - z : z];
+    };
+    for (const br of m.roofBraces) {
+      const [[xa, sa], [xb, sb]] = braceEnds(br, w);
+      out.push(diagonal(roofPt(xa, sa, false), roofPt(xb, sb, false), [0, cos, -sin], t, w, kind));
+      out.push(diagonal(roofPt(xa, sa, true), roofPt(xb, sb, true), [0, cos, sin], t, w, kind));
+    }
   }
   return out;
 }
@@ -107,6 +159,7 @@ function DiningTable({ m }: { m: Model }) {
 function Greenhouse({ m }: { m: Model }) {
   const { W, L, ridge, halfW, rise, slopeLen, angle } = m;
   const wood = useMemo(() => new THREE.MeshStandardMaterial({ color: '#d8b47a', roughness: 0.85 }), []);
+  const steel = useMemo(() => new THREE.MeshStandardMaterial({ color: '#9ca3af', metalness: 0.6, roughness: 0.4 }), []);
   const glass = useMemo(
     () => new THREE.MeshStandardMaterial({ color: '#8ec5ea', transparent: true, opacity: 0.3, side: THREE.DoubleSide, depthWrite: false, roughness: 0.1 }),
     [],
@@ -142,7 +195,7 @@ function Greenhouse({ m }: { m: Model }) {
       </lineSegments>
 
       {specs.map((b, i) => (
-        <Beam key={i} {...b} material={wood} />
+        <Beam key={i} {...b} material={b.kind === 'steel' ? steel : wood} />
       ))}
 
       {/* Glass: langvegger, gavler og tak */}

@@ -18,6 +18,8 @@ function Row({
 export function MaterialsTable({ m, mat, params }: { m: Model; mat: Materials; params: Params }) {
   const glassSum = mat.glassCount * params.glassPrice;
   const woodSum = mat.woodM * params.woodPrice;
+  const bandSum = mat.bandM * params.bandPrice;
+  const each = (n: number, len: number) => `à ${n0(len)} cm = ${n1((n * len) / 100)} m`;
   const gableMin = mat.gableStudLens.length ? Math.min(...mat.gableStudLens) : 0;
   const gableMax = mat.gableStudLens.length ? Math.max(...mat.gableStudLens) : 0;
   const { showPrice } = params;
@@ -60,6 +62,13 @@ export function MaterialsTable({ m, mat, params }: { m: Model; mat: Materials; p
           <Row showPrice={showPrice} name="Sperrer" qty={`${mat.rafters} stk`} amount={`à ${n0(m.slopeLen)} cm = ${n1(mat.rafterM)} m`} />
           <Row showPrice={showPrice} name="Mønebjelke" qty="1 stk" amount={`${n1(mat.ridgeM)} m`} />
           <Row showPrice={showPrice} name="Sviller (bunnsvill rundt, toppsvill langvegger)" amount={`${n1(mat.plateM)} m`} />
+          {m.bracing === 'tre' && (
+            <>
+              <Row showPrice={showPrice} name="Skråstag langvegger (innfelt)" qty={`${mat.braceLong} stk`} amount={each(mat.braceLong, mat.braceLongLen)} />
+              <Row showPrice={showPrice} name="Skråstag gavler (innfelt)" qty={`${mat.braceGable} stk`} amount={each(mat.braceGable, mat.braceGableLen)} />
+              <Row showPrice={showPrice} name="Skråstag takplan (innfelt i sperrene)" qty={`${mat.braceRoof} stk`} amount={each(mat.braceRoof, mat.braceRoofLen)} />
+            </>
+          )}
           <Row
             className="sum"
             name="Sum konstruksjonsvirke"
@@ -68,7 +77,23 @@ export function MaterialsTable({ m, mat, params }: { m: Model; mat: Materials; p
             showPrice={showPrice}
           />
 
-          {showPrice && <Row className="total" name="Totalt" price={kr(glassSum + woodSum)} showPrice />}
+          {m.bracing === 'stal' && (
+            <>
+              <tr className="section"><th colSpan={cols}>Hullbånd 40 × 2 mm</th></tr>
+              <Row showPrice={showPrice} name="Stålbånd langvegger" qty={`${mat.braceLong} stk`} amount={each(mat.braceLong, mat.braceLongLen)} />
+              <Row showPrice={showPrice} name="Stålbånd gavler" qty={`${mat.braceGable} stk`} amount={each(mat.braceGable, mat.braceGableLen)} />
+              <Row showPrice={showPrice} name="Stålbånd takplan (under sperrene)" qty={`${mat.braceRoof} stk`} amount={each(mat.braceRoof, mat.braceRoofLen)} />
+              <Row
+                className="sum"
+                name="Sum hullbånd"
+                amount={showPrice ? `${n1(mat.bandM)} m · ${n1(params.bandPrice)} kr/m` : `${n1(mat.bandM)} m`}
+                price={kr(bandSum)}
+                showPrice={showPrice}
+              />
+            </>
+          )}
+
+          {showPrice && <Row className="total" name="Totalt" price={kr(glassSum + woodSum + bandSum)} showPrice />}
         </tbody>
       </table>
     </div>

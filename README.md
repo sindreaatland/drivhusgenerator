@@ -7,6 +7,7 @@ Du velger bredde, lengde og mønehøyde, og får:
 
 - fasadetegninger av langside og gavl med mål
 - 3D-visning du kan rotere og zoome, med et spisebord på 90 × 240 cm som størrelsesreferanse
+- vindavstivning med innfelte skråstag i tre eller stålbånd, i hjørnefeltene på alle vegger og i endefeltene i takplanet
 - materialliste med antall glass og meter virke
 - prisoverslag, som kan slås av og på med «Vis pris»
 
@@ -38,8 +39,10 @@ for eksempel Cloudflare Pages, Netlify eller Vercel med byggekommando
 | `bredde`  | bredde kortside i cm         | 300      |
 | `lengde`  | lengde langside i cm         | 480      |
 | `mone`    | mønehøyde i cm               | 290      |
+| `avstivning` | vindavstivning: `ingen`, `tre` (skråstag 48 × 98) eller `stal` (hullbånd 40 × 2 mm) | tre |
 | `glass`   | pris per glass i kr          | 650      |
 | `virke`   | pris per meter virke i kr    | 39       |
+| `band`    | pris per meter hullbånd i kr | 30       |
 | `pris`    | vis pris, `1` eller `0`      | 0        |
 
 Bredde og lengde rundes til nærmeste 60 cm, som er senteravstanden

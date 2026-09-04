@@ -19,8 +19,8 @@ export default function App() {
     return () => window.clearTimeout(id);
   }, [params]);
   const model = useMemo(
-    () => buildModel(params.width, params.length, params.ridge),
-    [params.width, params.length, params.ridge],
+    () => buildModel(params.width, params.length, params.ridge, params.bracing),
+    [params.width, params.length, params.ridge, params.bracing],
   );
   const materials = useMemo(() => computeMaterials(model), [model]);
 
