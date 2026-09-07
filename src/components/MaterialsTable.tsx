@@ -18,6 +18,9 @@ function Row({
 export function MaterialsTable({ m, mat, params }: { m: Model; mat: Materials; params: Params }) {
   const glassSum = mat.glassCount * params.glassPrice;
   const woodSum = mat.woodM * params.woodPrice;
+  const heavySum = mat.heavyM * params.rafterPrice;
+  const beamSum = mat.ridgeM * params.beamPrice;
+  const stripSum = mat.stripM * params.stripPrice;
   const bandSum = mat.bandM * params.bandPrice;
   const each = (n: number, len: number) => `à ${n0(len)} cm = ${n1((n * len) / 100)} m`;
   const gableMin = mat.gableStudLens.length ? Math.min(...mat.gableStudLens) : 0;
@@ -56,11 +59,9 @@ export function MaterialsTable({ m, mat, params }: { m: Model; mat: Materials; p
             showPrice={showPrice}
           />
 
-          <tr className="section"><th colSpan={cols}>Konstruksjonsvirke 48 × 98 mm</th></tr>
+          <tr className="section"><th colSpan={cols}>Konstruksjonsvirke 48 × 98 mm (vegger)</th></tr>
           <Row showPrice={showPrice} name="Stendere langvegger" qty={`${mat.longStuds} stk`} amount={`à ${n0(mat.studLen)} cm = ${n1(mat.longStudM)} m`} />
           <Row showPrice={showPrice} name="Stendere gavler" qty={`${mat.gableStuds} stk`} amount={`${n0(gableMin)}–${n0(gableMax)} cm = ${n1(mat.gableStudM)} m`} />
-          <Row showPrice={showPrice} name="Sperrer" qty={`${mat.rafters} stk`} amount={`à ${n0(m.slopeLen)} cm = ${n1(mat.rafterM)} m`} />
-          <Row showPrice={showPrice} name="Mønebjelke" qty="1 stk" amount={`${n1(mat.ridgeM)} m`} />
           <Row showPrice={showPrice} name="Sviller (bunnsvill rundt, toppsvill langvegger)" amount={`${n1(mat.plateM)} m`} />
           {m.bracing === 'tre' && (
             <>
@@ -71,9 +72,42 @@ export function MaterialsTable({ m, mat, params }: { m: Model; mat: Materials; p
           )}
           <Row
             className="sum"
-            name="Sum konstruksjonsvirke"
+            name="Sum 48 × 98"
             amount={showPrice ? `${n1(mat.woodM)} m · ${n1(params.woodPrice)} kr/m` : `${n1(mat.woodM)} m`}
             price={kr(woodSum)}
+            showPrice={showPrice}
+          />
+
+          <tr className="section"><th colSpan={cols}>Konstruksjonsvirke 48 × 148 mm (tak og stolper)</th></tr>
+          <Row showPrice={showPrice} name="Sperrer" qty={`${mat.rafters} stk`} amount={`à ${n0(m.slopeLen)} cm = ${n1(mat.rafterM)} m`} />
+          <Row showPrice={showPrice} name="Stolper under mønedrager, i gavlene" qty={`${mat.posts} stk`} amount={`à ${n0(mat.postLen)} cm = ${n1(mat.postM)} m`} />
+          <Row
+            className="sum"
+            name="Sum 48 × 148"
+            amount={showPrice ? `${n1(mat.heavyM)} m · ${n1(params.rafterPrice)} kr/m` : `${n1(mat.heavyM)} m`}
+            price={kr(heavySum)}
+            showPrice={showPrice}
+          />
+
+          <tr className="section"><th colSpan={cols}>Limtredrager 140 × 315 mm</th></tr>
+          <Row
+            className="sum"
+            name="Mønedrager"
+            qty="1 stk"
+            amount={`${n1(mat.ridgeM)} m${showPrice ? ` · ${n1(params.beamPrice)} kr/m` : ''}`}
+            price={kr(beamSum)}
+            showPrice={showPrice}
+          />
+
+          <tr className="section"><th colSpan={cols}>Klemmelist 21 × 45 mm</th></tr>
+          <Row showPrice={showPrice} name="Langvegger (stendere, bunnsvill, toppsvill)" amount={`${n1(mat.stripLongM)} m`} />
+          <Row showPrice={showPrice} name="Gavler (stendere, hjørner, stolpe, svill, skjøt ved 210, gavlsperrer)" amount={`${n1(mat.stripGableM)} m`} />
+          <Row showPrice={showPrice} name="Tak (sperrer, raft, møne, skjøter langs takfallet)" amount={`${n1(mat.stripRoofM)} m`} />
+          <Row
+            className="sum"
+            name="Sum klemmelist"
+            amount={showPrice ? `${n1(mat.stripM)} m · ${n1(params.stripPrice)} kr/m` : `${n1(mat.stripM)} m`}
+            price={kr(stripSum)}
             showPrice={showPrice}
           />
 
@@ -93,7 +127,7 @@ export function MaterialsTable({ m, mat, params }: { m: Model; mat: Materials; p
             </>
           )}
 
-          {showPrice && <Row className="total" name="Totalt" price={kr(glassSum + woodSum + bandSum)} showPrice />}
+          {showPrice && <Row className="total" name="Totalt" price={kr(glassSum + woodSum + heavySum + beamSum + stripSum + bandSum)} showPrice />}
         </tbody>
       </table>
     </div>

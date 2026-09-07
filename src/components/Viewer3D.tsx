@@ -2,12 +2,15 @@ import { useEffect, useMemo, useRef } from 'react';
 import { Canvas, useThree } from '@react-three/fiber';
 import { Edges, OrbitControls } from '@react-three/drei';
 import * as THREE from 'three';
-import { STUD_D, STUD_W, WALL_H, braceEnds, gableStudTops, studSpan, type Model } from '../model';
+import {
+  BEAM_H, BEAM_W, POST_T, POST_W, RAFTER_D, RAFTER_W, STRIP_T, STRIP_W, STUD_D, STUD_W, WALL_H,
+  braceEnds, gableStudTops, studSpan, type Model,
+} from '../model';
 
 // Akser: X langs lengden (0..L), Y opp, Z langs bredden (0..W).
 type V3 = [number, number, number];
 type Quat = [number, number, number, number];
-type BeamKind = 'wood' | 'steel';
+type BeamKind = 'wood' | 'steel' | 'strip';
 
 interface BeamSpec {
   size: V3;
@@ -16,7 +19,7 @@ interface BeamSpec {
   kind?: BeamKind;
 }
 
-const EDGE: Record<BeamKind, string> = { wood: '#6b4a1c', steel: '#374151' };
+const EDGE: Record<BeamKind, string> = { wood: '#6b4a1c', steel: '#374151', strip: '#5a3f18' };
 const IDENTITY: Quat = [0, 0, 0, 1];
 
 const quatX = (a: number): Quat => new THREE.Quaternion().setFromEuler(new THREE.Euler(a, 0, 0)).toArray() as Quat;
@@ -45,7 +48,7 @@ function Beam({ size, position, quat = IDENTITY, kind = 'wood', material }: Beam
 }
 
 function beams(m: Model): BeamSpec[] {
-  const { W, L, ridge, nW, nL, halfW, rise, slopeLen, angle, tv } = m;
+  const { W, L, ridge, nL, halfW, rise, slopeLen, angle, beamTop, postTop } = m;
   const out: BeamSpec[] = [];
 
   // Bunnsviller (ligger flatt) og toppsviller på langveggene
@@ -66,16 +69,20 @@ function beams(m: Model): BeamSpec[] {
   }
 
   // Stendere gavler (opp til underkant sperre)
-  for (let j = 1; j < nW; j++) {
-    const [z0, z1] = studSpan(j, nW, W);
+  for (const [z0, z1] of m.gableStuds) {
     const cz = (z0 + z1) / 2;
     const h = Math.min(...gableStudTops(m, z0, z1)) - STUD_W;
     out.push({ size: [STUD_D, h, STUD_W], position: [STUD_D / 2, STUD_W + h / 2, cz] });
     out.push({ size: [STUD_D, h, STUD_W], position: [L - STUD_D / 2, STUD_W + h / 2, cz] });
   }
 
-  // Mønebjelke
-  out.push({ size: [L, STUD_D, STUD_W], position: [L / 2, ridge - tv - STUD_D / 2, halfW] });
+  // Stolper 48 × 148 under mønedrageren, ned på bunnsvillen i hver gavl
+  const postH = postTop - STUD_W;
+  out.push({ size: [POST_T, postH, POST_W], position: [POST_T / 2, STUD_W + postH / 2, halfW] });
+  out.push({ size: [POST_T, postH, POST_W], position: [L - POST_T / 2, STUD_W + postH / 2, halfW] });
+
+  // Mønedrager i limtre, sperrene hviler på kantene
+  out.push({ size: [L, BEAM_H, BEAM_W], position: [L / 2, beamTop - BEAM_H / 2, halfW] });
 
   // Sperrer c/c 60, overkant følger taklinjen fra (z=0, y=210) til (z=W/2, y=mønehøyde)
   const dz = halfW / slopeLen;
@@ -85,8 +92,8 @@ function beams(m: Model): BeamSpec[] {
   for (let i = 0; i <= nL; i++) {
     const [x0, x1] = studSpan(i, nL, L);
     const cx = (x0 + x1) / 2;
-    out.push({ size: [STUD_W, STUD_D, slopeLen], position: [cx, my - (dz * STUD_D) / 2, mz + (dy * STUD_D) / 2], quat: quatX(-angle) });
-    out.push({ size: [STUD_W, STUD_D, slopeLen], position: [cx, my - (dz * STUD_D) / 2, W - mz - (dy * STUD_D) / 2], quat: quatX(angle) });
+    out.push({ size: [RAFTER_W, RAFTER_D, slopeLen], position: [cx, my - (dz * RAFTER_D) / 2, mz + (dy * RAFTER_D) / 2], quat: quatX(-angle) });
+    out.push({ size: [RAFTER_W, RAFTER_D, slopeLen], position: [cx, my - (dz * RAFTER_D) / 2, W - mz - (dy * RAFTER_D) / 2], quat: quatX(angle) });
   }
 
   // Vindavstivning. Skråstag felles inn fra innsiden av stendere og sperrer; stålbånd spikres på innsiden/undersiden.
@@ -117,6 +124,60 @@ function beams(m: Model): BeamSpec[] {
       out.push(diagonal(roofPt(xa, sa, false), roofPt(xb, sb, false), [0, cos, -sin], t, w, kind));
       out.push(diagonal(roofPt(xa, sa, true), roofPt(xb, sb, true), [0, cos, sin], t, w, kind));
     }
+  }
+  return out;
+}
+
+/** Klemmelister 21 × 45 utenpå glasset, over alle stendere, sperrer, sviller og skjøter. */
+function strips(m: Model): BeamSpec[] {
+  const { W, L, nL, halfW, ridge, tv, seatX, slopeLen, angle, roofPieces, gableStuds, postTop } = m;
+  const out: BeamSpec[] = [];
+  const kind: BeamKind = 'strip';
+  const t = STRIP_T;
+  const w = STRIP_W;
+  const off = 0.3 + t / 2; // glasset ligger 0.3 utenfor stenderne
+
+  // Langvegger: stendere, bunnsvill og toppsvill
+  for (const z of [-off, W + off]) {
+    for (let i = 0; i <= nL; i++) {
+      const [x0, x1] = studSpan(i, nL, L);
+      out.push({ size: [w, WALL_H, t], position: [(x0 + x1) / 2, WALL_H / 2, z], kind });
+    }
+    out.push({ size: [L, w, t], position: [L / 2, w / 2, z], kind });
+    out.push({ size: [L, w, t], position: [L / 2, WALL_H - w / 2, z], kind });
+  }
+
+  // Gavler: stendere, hjørner, stolpekanter, bunnsvill, skjøt ved 210 og langs gavlsperrene
+  for (const [x, sign] of [[-off, -1], [L + off, 1]] as const) {
+    for (const [z0, z1] of gableStuds) {
+      const h = Math.min(...gableStudTops(m, z0, z1));
+      out.push({ size: [t, h, w], position: [x, h / 2, (z0 + z1) / 2], kind });
+    }
+    for (const cz of [STUD_D / 2, W - STUD_D / 2]) out.push({ size: [t, WALL_H, w], position: [x, WALL_H / 2, cz], kind });
+    for (const cz of [halfW - POST_W / 2 + w / 2, halfW + POST_W / 2 - w / 2]) out.push({ size: [t, postTop, w], position: [x, postTop / 2, cz], kind });
+    out.push({ size: [t, w, W], position: [x, w / 2, halfW], kind });
+    out.push({ size: [t, w, W], position: [x, WALL_H, halfW], kind });
+    const n: V3 = [sign, 0, 0];
+    out.push(diagonal([x, WALL_H, seatX], [x, ridge - tv, halfW], n, t, w, kind));
+    out.push(diagonal([x, WALL_H, W - seatX], [x, ridge - tv, halfW], n, t, w, kind));
+  }
+
+  // Tak: langs sperrer, raft, møne og skjøter mellom glassdelene, utenpå takglasset
+  const sin = Math.sin(angle);
+  const cos = Math.cos(angle);
+  const roofOff = 0.6 + t / 2;
+  for (const far of [false, true]) {
+    const pt = (x: number, s: number): V3 => {
+      const z = s * cos - roofOff * sin;
+      return [x, WALL_H + s * sin + roofOff * cos, far ? W - z : z];
+    };
+    const n: V3 = [0, cos, far ? sin : -sin];
+    for (let i = 0; i <= nL; i++) {
+      const [x0, x1] = studSpan(i, nL, L);
+      out.push(diagonal(pt((x0 + x1) / 2, 0), pt((x0 + x1) / 2, slopeLen), n, t, w, kind));
+    }
+    const joints = roofPieces.slice(0, -1).map((_, i) => roofPieces.slice(0, i + 1).reduce((a, b) => a + b, 0));
+    for (const s of [w / 2, slopeLen - w / 2, ...joints]) out.push(diagonal(pt(0, s), pt(L, s), n, t, w, kind));
   }
   return out;
 }
@@ -160,6 +221,8 @@ function Greenhouse({ m }: { m: Model }) {
   const { W, L, ridge, halfW, rise, slopeLen, angle } = m;
   const wood = useMemo(() => new THREE.MeshStandardMaterial({ color: '#d8b47a', roughness: 0.85 }), []);
   const steel = useMemo(() => new THREE.MeshStandardMaterial({ color: '#9ca3af', metalness: 0.6, roughness: 0.4 }), []);
+  const strip = useMemo(() => new THREE.MeshStandardMaterial({ color: '#b8905a', roughness: 0.85 }), []);
+  const materials: Record<BeamKind, THREE.Material> = { wood, steel, strip };
   const glass = useMemo(
     () => new THREE.MeshStandardMaterial({ color: '#8ec5ea', transparent: true, opacity: 0.3, side: THREE.DoubleSide, depthWrite: false, roughness: 0.1 }),
     [],
@@ -179,7 +242,7 @@ function Greenhouse({ m }: { m: Model }) {
   const dy = rise / slopeLen;
   const my = (WALL_H + ridge) / 2;
   const mz = halfW / 2;
-  const specs = beams(m);
+  const specs = [...beams(m), ...strips(m)];
 
   return (
     <group>
@@ -195,7 +258,7 @@ function Greenhouse({ m }: { m: Model }) {
       </lineSegments>
 
       {specs.map((b, i) => (
-        <Beam key={i} {...b} material={b.kind === 'steel' ? steel : wood} />
+        <Beam key={i} {...b} material={materials[b.kind ?? 'wood']} />
       ))}
 
       {/* Glass: langvegger, gavler og tak */}

@@ -28,7 +28,7 @@ export default function App() {
     <>
       <header className="topbar">
         <h1>Drivhusgenerator</h1>
-        <p>Tekniske tegninger og prisoverslag for drivhus i 48 × 98 konstruksjonsvirke med glass 60 × 210 cm.</p>
+        <p>Tekniske tegninger og prisoverslag for drivhus i konstruksjonsvirke 48 × 98 i veggene og 48 × 148 i taket, limtredrager 140 × 315 i mønet og glass 60 × 210 cm.</p>
       </header>
       <main className="layout">
         <Controls params={params} model={model} onChange={setParams} />

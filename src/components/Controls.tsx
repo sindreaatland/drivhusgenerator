@@ -206,8 +206,20 @@ export function Controls({ params, model, onChange }: { params: Params; model: M
               <NumberField id="glassPrice" value={params.glassPrice} min={0} max={1e6} unit="kr/stk" onCommit={(v) => set({ glassPrice: v })} />
             </div>
             <div className="field">
-              <label className="field-label" htmlFor="woodPrice">Konstruksjonsvirke 48 × 98</label>
+              <label className="field-label" htmlFor="woodPrice">Konstruksjonsvirke 48 × 98 (vegger)</label>
               <NumberField id="woodPrice" value={params.woodPrice} min={0} max={1e5} step={0.5} unit="kr/m" onCommit={(v) => set({ woodPrice: v })} />
+            </div>
+            <div className="field">
+              <label className="field-label" htmlFor="rafterPrice">Konstruksjonsvirke 48 × 148 (sperrer og stolper)</label>
+              <NumberField id="rafterPrice" value={params.rafterPrice} min={0} max={1e5} step={0.5} unit="kr/m" onCommit={(v) => set({ rafterPrice: v })} />
+            </div>
+            <div className="field">
+              <label className="field-label" htmlFor="beamPrice">Limtredrager 140 × 315</label>
+              <NumberField id="beamPrice" value={params.beamPrice} min={0} max={1e6} unit="kr/m" onCommit={(v) => set({ beamPrice: v })} />
+            </div>
+            <div className="field">
+              <label className="field-label" htmlFor="stripPrice">Klemmelist 21 × 45</label>
+              <NumberField id="stripPrice" value={params.stripPrice} min={0} max={1e5} step={0.5} unit="kr/m" onCommit={(v) => set({ stripPrice: v })} />
             </div>
             {params.bracing === 'stal' && (
               <div className="field">

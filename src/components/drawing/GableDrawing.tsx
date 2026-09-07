@@ -1,8 +1,8 @@
-import { BAY, STUD_D, STUD_W, WALL_H, bracePoly, gableStudTops, n0, n1, studSpan, type Model } from '../../model';
+import { BAY, BEAM_H, BEAM_W, POST_W, STUD_D, STUD_W, WALL_H, bracePoly, gableStudTops, n0, n1, type Model } from '../../model';
 import { COLORS, DimAlong, DimH, DimV, Line, Poly, Rect, Text, f, makeCtx } from './svg';
 
 export function GableDrawing({ m }: { m: Model }) {
-  const { W, ridge, nW, halfW, rise, tv, seatX, angle, angleDeg, slopeLen, roofPieces, roofTop, bracing, braceW, wallBracesGable } = m;
+  const { W, ridge, halfW, rise, tv, seatX, beamBottom, postTop, gableStuds, angle, angleDeg, slopeLen, roofPieces, roofTop, bracing, braceW, wallBracesGable } = m;
   const braceKind = bracing === 'stal' ? 'steel' : 'wood';
   const k = Math.max(W / 70, ridge / 40);
   const c = makeCtx(k);
@@ -10,7 +10,6 @@ export function GableDrawing({ m }: { m: Model }) {
   const padR = 5 * k;
   const padT = 6.5 * k;
   const padB = 8.5 * k;
-  const studs = Array.from({ length: Math.max(0, nW - 1) }, (_, j) => studSpan(j + 1, nW, W));
   const angleX = halfW / 2;
   const roofDim = 4 * k;
   // Punkt på høyre takflate i avstand s fra raften
@@ -41,12 +40,14 @@ export function GableDrawing({ m }: { m: Model }) {
       <Rect c={c} x={0} y={WALL_H - STUD_W} w={STUD_D} h={STUD_W} kind="wood" />
       <Rect c={c} x={W - STUD_D} y={WALL_H - STUD_W} w={STUD_D} h={STUD_W} kind="wood" />
       {/* gavlstendere c/c 60 opp til sperre */}
-      {studs.map(([x0, x1], j) => {
+      {gableStuds.map(([x0, x1], j) => {
         const [t0, t1] = gableStudTops(m, x0, x1);
         return <Poly key={j} c={c} pts={[[x0, STUD_W], [x1, STUD_W], [x1, t1], [x0, t0]]} kind="wood" />;
       })}
-      {/* mønebjelke sett fra enden */}
-      <Rect c={c} x={halfW - STUD_W / 2} y={ridge - tv - STUD_D} w={STUD_W} h={STUD_D} kind="wood" />
+      {/* stolpe 48 × 148 under mønedrageren */}
+      <Rect c={c} x={halfW - POST_W / 2} y={STUD_W} w={POST_W} h={postTop - STUD_W} kind="wood" />
+      {/* mønedrager i limtre sett fra enden */}
+      <Rect c={c} x={halfW - BEAM_W / 2} y={beamBottom} w={BEAM_W} h={BEAM_H} kind="wood" />
       {/* sperrer */}
       <Poly c={c} pts={[[0, WALL_H], [halfW, ridge], [halfW, ridge - tv], [seatX, WALL_H]]} kind="wood" />
       <Poly c={c} pts={[[W, WALL_H], [halfW, ridge], [halfW, ridge - tv], [W - seatX, WALL_H]]} kind="wood" />

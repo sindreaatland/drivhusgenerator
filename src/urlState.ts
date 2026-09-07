@@ -10,6 +10,9 @@ const KEYS = {
   bracing: 'avstivning',
   glassPrice: 'glass',
   woodPrice: 'virke',
+  rafterPrice: 'sperre',
+  beamPrice: 'drager',
+  stripPrice: 'list',
   bandPrice: 'band',
   showPrice: 'pris',
 } as const;
@@ -36,6 +39,12 @@ export function paramsFromSearch(search: string): Params {
   if (glass !== null) p.glassPrice = Math.max(0, glass);
   const wood = num(KEYS.woodPrice);
   if (wood !== null) p.woodPrice = Math.max(0, wood);
+  const rafter = num(KEYS.rafterPrice);
+  if (rafter !== null) p.rafterPrice = Math.max(0, rafter);
+  const beam = num(KEYS.beamPrice);
+  if (beam !== null) p.beamPrice = Math.max(0, beam);
+  const strip = num(KEYS.stripPrice);
+  if (strip !== null) p.stripPrice = Math.max(0, strip);
   const band = num(KEYS.bandPrice);
   if (band !== null) p.bandPrice = Math.max(0, band);
   const showPrice = q.get(KEYS.showPrice);
@@ -51,6 +60,9 @@ export function searchFromParams(p: Params): string {
   q.set(KEYS.bracing, p.bracing);
   q.set(KEYS.glassPrice, String(p.glassPrice));
   q.set(KEYS.woodPrice, String(p.woodPrice));
+  q.set(KEYS.rafterPrice, String(p.rafterPrice));
+  q.set(KEYS.beamPrice, String(p.beamPrice));
+  q.set(KEYS.stripPrice, String(p.stripPrice));
   q.set(KEYS.bandPrice, String(p.bandPrice));
   q.set(KEYS.showPrice, p.showPrice ? '1' : '0');
   return `?${q.toString()}`;
