@@ -28,15 +28,15 @@ jobs:
       # Sørg for at Pages publiserer fra denne workflowen og ikke fra grenen, ellers
       # kappes de to publiseringene og gren-publiseringen kan servere ubygd kildekode.
       - name: Sett Pages-kilde til GitHub Actions
+        continue-on-error: true
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          code=$(curl -sS -o /tmp/pages.json -w '%{http_code}' -X PUT \
+          curl -sSf -X PUT \
             -H "Authorization: Bearer $GH_TOKEN" \
             -H "Accept: application/vnd.github+json" \
             "https://api.github.com/repos/${{ github.repository }}/pages" \
-            -d '{"build_type":"workflow"}')
-          echo "HTTP $code"; cat /tmp/pages.json; echo
+            -d '{"build_type":"workflow"}'
       - uses: actions/configure-pages@v5
         with:
           enablement: true
