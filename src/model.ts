@@ -305,12 +305,12 @@ export function computeMaterials(m: Model): Materials {
   const bandM = m.bracing === 'stal' ? braceM : 0;
   const woodM = longStudM + gableStudM + plateM + braceWoodM;
 
-  // Klemmelist over alle glasskanter: én list der to glass møtes på samme stender, og rundt alle ytterkanter.
+  // Klemmelist: én list der to glass møtes på samme stender. Langvegger og tak har også lister langs kantene,
+  // gavlene har bare vertikale lister fra bunnsvill helt opp til overkant tak, over gavlsperren.
   const sum = (xs: number[]) => xs.reduce((a, b) => a + b, 0);
-  const gableTopEdge = Math.hypot(m.halfW - m.seatX, m.ridge - m.tv - WALL_H); // glasskant langs én gavlsperre
   const stripLongM = (2 * ((m.nL + 1) * WALL_H + 2 * m.L)) / 100; // stendere, bunnsvill og toppsvill
-  const stripGableM =
-    (2 * (sum(gableTops) + 2 * WALL_H + 2 * m.postTop + 2 * m.W + 2 * gableTopEdge)) / 100; // stendere, hjørner, stolpekanter, bunnsvill og skjøt ved 210, gavlsperrer
+  const gableStripZ = [...m.gableStuds.map(([z0, z1]) => (z0 + z1) / 2), STUD_D / 2, m.W - STUD_D / 2, m.halfW]; // stendere, hjørner, midt på stolpen
+  const stripGableM = (2 * sum(gableStripZ.map((z) => m.roofTop(z)))) / 100;
   const stripRoofM = (2 * ((m.nL + 1) * m.slopeLen + (1 + m.roofPieces.length) * m.L)) / 100; // sperrer, raft, møne og skjøter langs takfallet
   const stripM = stripLongM + stripGableM + stripRoofM;
 

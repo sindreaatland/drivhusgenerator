@@ -101,7 +101,7 @@ export function MaterialsTable({ m, mat, params }: { m: Model; mat: Materials; p
 
           <tr className="section"><th colSpan={cols}>Klemmelist 21 × 45 mm</th></tr>
           <Row showPrice={showPrice} name="Langvegger (stendere, bunnsvill, toppsvill)" amount={`${n1(mat.stripLongM)} m`} />
-          <Row showPrice={showPrice} name="Gavler (stendere, hjørner, stolpe, svill, skjøt ved 210, gavlsperrer)" amount={`${n1(mat.stripGableM)} m`} />
+          <Row showPrice={showPrice} name="Gavler (vertikalt over stendere, hjørner og stolpe, bunn til overkant tak)" amount={`${n1(mat.stripGableM)} m`} />
           <Row showPrice={showPrice} name="Tak (sperrer, raft, møne, skjøter langs takfallet)" amount={`${n1(mat.stripRoofM)} m`} />
           <Row
             className="sum"

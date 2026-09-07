@@ -128,9 +128,9 @@ function beams(m: Model): BeamSpec[] {
   return out;
 }
 
-/** Klemmelister 21 × 45 utenpå glasset, over alle stendere, sperrer, sviller og skjøter. */
+/** Klemmelister 21 × 45 utenpå glasset: over stendere og sviller på langveggene, bare vertikalt fra bunn til overkant tak på gavlene, og over sperrer, raft, møne og skjøter på taket. */
 function strips(m: Model): BeamSpec[] {
-  const { W, L, nL, halfW, ridge, tv, seatX, slopeLen, angle, roofPieces, gableStuds, postTop } = m;
+  const { W, L, nL, halfW, slopeLen, angle, roofPieces, gableStuds } = m;
   const out: BeamSpec[] = [];
   const kind: BeamKind = 'strip';
   const t = STRIP_T;
@@ -147,19 +147,13 @@ function strips(m: Model): BeamSpec[] {
     out.push({ size: [L, w, t], position: [L / 2, WALL_H - w / 2, z], kind });
   }
 
-  // Gavler: stendere, hjørner, stolpekanter, bunnsvill, skjøt ved 210 og langs gavlsperrene
-  for (const [x, sign] of [[-off, -1], [L + off, 1]] as const) {
-    for (const [z0, z1] of gableStuds) {
-      const h = Math.min(...gableStudTops(m, z0, z1));
-      out.push({ size: [t, h, w], position: [x, h / 2, (z0 + z1) / 2], kind });
+  // Gavler: bare vertikale lister, fra bunnsvill helt opp til overkant tak, over gavlsperren
+  for (const x of [-off, L + off]) {
+    const zs = [...gableStuds.map(([z0, z1]) => (z0 + z1) / 2), STUD_D / 2, W - STUD_D / 2, halfW]; // stendere, hjørner, midt på stolpen
+    for (const cz of zs) {
+      const h = m.roofTop(cz);
+      out.push({ size: [t, h, w], position: [x, h / 2, cz], kind });
     }
-    for (const cz of [STUD_D / 2, W - STUD_D / 2]) out.push({ size: [t, WALL_H, w], position: [x, WALL_H / 2, cz], kind });
-    for (const cz of [halfW - POST_W / 2 + w / 2, halfW + POST_W / 2 - w / 2]) out.push({ size: [t, postTop, w], position: [x, postTop / 2, cz], kind });
-    out.push({ size: [t, w, W], position: [x, w / 2, halfW], kind });
-    out.push({ size: [t, w, W], position: [x, WALL_H, halfW], kind });
-    const n: V3 = [sign, 0, 0];
-    out.push(diagonal([x, WALL_H, seatX], [x, ridge - tv, halfW], n, t, w, kind));
-    out.push(diagonal([x, WALL_H, W - seatX], [x, ridge - tv, halfW], n, t, w, kind));
   }
 
   // Tak: langs sperrer, raft, møne og skjøter mellom glassdelene, utenpå takglasset

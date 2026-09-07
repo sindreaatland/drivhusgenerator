@@ -9,7 +9,7 @@ Du velger bredde, lengde og mønehøyde, og får:
 - fasadetegninger av langside og gavl med mål
 - 3D-visning du kan rotere og zoome, med et spisebord på 90 × 240 cm som størrelsesreferanse
 - vindavstivning med innfelte skråstag i tre eller stålbånd, i hjørnefeltene på alle vegger og i endefeltene i takplanet
-- stolper 48 × 148 under mønedrageren i begge gavler, og klemmelist 21 × 45 over alle glasskanter
+- stolper 48 × 148 under mønedrageren i begge gavler, og klemmelist 21 × 45 på alle glass (kun vertikale lister på gavlene)
 - materialliste med antall glass og meter virke, fordelt på 48 × 98, 48 × 148, limtre og klemmelist
 - prisoverslag, som kan slås av og på med «Vis pris»
 
