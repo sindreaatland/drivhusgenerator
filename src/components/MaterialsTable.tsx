@@ -40,10 +40,10 @@ export function MaterialsTable({ m, mat, params }: { m: Model; mat: Materials; p
           </tr>
         </thead>
         <tbody>
-          <tr className="section"><th colSpan={cols}>Glass 60 × 210 cm</th></tr>
+          <tr className="section"><th colSpan={cols}>Glass 125,2 × 199,5 cm</th></tr>
           <Row showPrice={showPrice} name="Langvegger" qty={`${mat.glassLongWalls} stk`} amount={`${2 * m.nL} fag`} />
-          <Row showPrice={showPrice} name="Gavlvegger under 210 cm" qty={`${mat.glassGableLower} stk`} amount={`${2 * m.nW} fag`} />
-          <Row showPrice={showPrice} name="Gavltrekanter (tilpasses)" qty={`${mat.glassGableTri} stk`} amount={`${n0(m.rise)} cm høyde i møne`} />
+          <Row showPrice={showPrice} name="Gavlvegger under 199,5 cm" qty={`${mat.glassGableLower} stk`} amount={`${2 * m.nW} fag`} />
+          <Row showPrice={showPrice} name="Gavltrekanter (tilpasses)" qty={`${mat.glassGableTri} stk`} amount={`${n1(m.rise)} cm høyde i møne`} />
           <Row
             showPrice={showPrice}
             name="Tak (tilpasses)"

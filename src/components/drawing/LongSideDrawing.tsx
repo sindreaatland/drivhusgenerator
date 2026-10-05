@@ -1,4 +1,4 @@
-import { BAY, BEAM_H, STUD_W, WALL_H, bracePoly, studSpan, type Model } from '../../model';
+import { BAY, BEAM_H, STUD_W, WALL_H, bracePoly, n1, studSpan, type Model } from '../../model';
 import { COLORS, DimH, DimV, Line, Poly, Rect, Text, f, makeCtx } from './svg';
 
 export function LongSideDrawing({ m }: { m: Model }) {
@@ -42,7 +42,7 @@ export function LongSideDrawing({ m }: { m: Model }) {
       {wallBracesLong.map((br, i) => (
         <Poly key={i} c={c} pts={bracePoly(br, braceW)} kind={braceKind} />
       ))}
-      {/* stendere og sperrer c/c 60 */}
+      {/* stendere og sperrer c/c 125,2 */}
       {studs.map(([x0, x1], i) => (
         <g key={i}>
           <Rect c={c} x={x0} y={STUD_W} w={x1 - x0} h={WALL_H - 2 * STUD_W} kind="wood" />
@@ -53,11 +53,11 @@ export function LongSideDrawing({ m }: { m: Model }) {
       <Line c={c} x1={0} y1={WALL_H} x2={L} y2={WALL_H} kind="outline" />
       <Line c={c} x1={-1.5 * k} y1={0} x2={L + 1.5 * k} y2={0} kind="ground" />
       {/* mål */}
-      <DimH c={c} x1={0} x2={BAY} yObj={0} yDim={-2.5 * k} label="c/c 60" />
+      <DimH c={c} x1={0} x2={BAY} yObj={0} yDim={-2.5 * k} label={`c/c ${n1(BAY)}`} />
       <DimH c={c} x1={0} x2={L} yObj={0} yDim={-5.5 * k} label={`${L}`} />
-      <DimV c={c} y1={0} y2={WALL_H} xObj={0} xDim={-2.5 * k} label={`${WALL_H}`} />
+      <DimV c={c} y1={0} y2={WALL_H} xObj={0} xDim={-2.5 * k} label={n1(WALL_H)} />
       <DimV c={c} y1={0} y2={ridge} xObj={0} xDim={-5.5 * k} label={`${ridge}`} />
-      <DimV c={c} y1={WALL_H} y2={ridge} xObj={L} xDim={L + 2.5 * k} label={`${rise}`} />
+      <DimV c={c} y1={WALL_H} y2={ridge} xObj={L} xDim={L + 2.5 * k} label={n1(rise)} />
       <Text c={c} x={L} y={-7.6 * k} anchor="end" color={COLORS.ink}>Mål i cm</Text>
     </svg>
   );

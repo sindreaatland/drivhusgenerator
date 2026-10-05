@@ -111,7 +111,7 @@ export function Controls({ params, model, onChange }: { params: Params; model: M
             value={params.width}
             onChange={(e) => set({ width: snap(Number(e.target.value)) })}
           />
-          <span className="hint">Trinn på {BAY} cm · {model.nW} fag</span>
+          <span className="hint">Trinn på {n1(BAY)} cm · {model.nW} fag</span>
         </label>
         <label className="field">
           <span className="field-label">
@@ -125,7 +125,7 @@ export function Controls({ params, model, onChange }: { params: Params; model: M
             value={params.length}
             onChange={(e) => set({ length: snap(Number(e.target.value)) })}
           />
-          <span className="hint">Trinn på {BAY} cm · {model.nL} fag</span>
+          <span className="hint">Trinn på {n1(BAY)} cm · {model.nL} fag</span>
         </label>
         <div className="field">
           <label className="field-label" htmlFor="ridge">Mønehøyde</label>
@@ -139,7 +139,7 @@ export function Controls({ params, model, onChange }: { params: Params; model: M
             value={params.ridge}
             onChange={(e) => set({ ridge: Number(e.target.value) })}
           />
-          <span className="hint">Vegghøyde på langside er fast {WALL_H} cm. Taket starter ved {WALL_H} cm.</span>
+          <span className="hint">Vegghøyde på langside er fast {n1(WALL_H)} cm. Taket starter ved {n1(WALL_H)} cm.</span>
         </div>
         <dl className="facts">
           <div>
@@ -202,7 +202,7 @@ export function Controls({ params, model, onChange }: { params: Params; model: M
         {params.showPrice ? (
           <>
             <div className="field">
-              <label className="field-label" htmlFor="glassPrice">Glass 60 × 210 cm</label>
+              <label className="field-label" htmlFor="glassPrice">Glass 125,2 × 199,5 cm</label>
               <NumberField id="glassPrice" value={params.glassPrice} min={0} max={1e6} unit="kr/stk" onCommit={(v) => set({ glassPrice: v })} />
             </div>
             <div className="field">

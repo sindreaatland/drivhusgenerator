@@ -2,7 +2,7 @@
 
 Nettapp som lager tekniske tegninger og prisoverslag for et drivhus bygd i
 konstruksjonsvirke 48 × 98 mm i veggene og 48 × 148 mm i taket, med
-limtredrager 140 × 315 mm i mønet og glass på 60 × 210 cm.
+limtredrager 140 × 315 mm i mønet og glass på 125,2 × 199,5 cm.
 
 Du velger bredde, lengde og mønehøyde, og får:
 
@@ -38,8 +38,8 @@ for eksempel Cloudflare Pages, Netlify eller Vercel med byggekommando
 
 | Parameter | Betydning                    | Standard |
 |-----------|------------------------------|----------|
-| `bredde`  | bredde kortside i cm         | 300      |
-| `lengde`  | lengde langside i cm         | 480      |
+| `bredde`  | bredde kortside i cm         | 250,4    |
+| `lengde`  | lengde langside i cm         | 500,8    |
 | `mone`    | mønehøyde i cm               | 290      |
 | `avstivning` | vindavstivning: `ingen`, `tre` (skråstag 48 × 98) eller `stal` (hullbånd 40 × 2 mm) | tre |
 | `glass`   | pris per glass i kr          | 650      |
@@ -50,7 +50,7 @@ for eksempel Cloudflare Pages, Netlify eller Vercel med byggekommando
 | `band`    | pris per meter hullbånd i kr | 30       |
 | `pris`    | vis pris, `1` eller `0`      | 0        |
 
-Bredde og lengde rundes til nærmeste 60 cm, som er senteravstanden
+Bredde og lengde rundes til nærmeste 125,2 cm, som er senteravstanden
 mellom stenderne.
 
 ## Teknologi

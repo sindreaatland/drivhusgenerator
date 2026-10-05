@@ -1,9 +1,9 @@
 // Alle mål i cm.
 
-export const BAY = 60; // senteravstand stendere = bredde på glass
-export const WALL_H = 210; // vegghøyde langside = høyde på glass
-export const PANEL_W = 60;
-export const PANEL_H = 210;
+export const BAY = 125.2; // senteravstand stendere = bredde på glass
+export const WALL_H = 199.5; // vegghøyde langside = høyde på glass
+export const PANEL_W = 125.2;
+export const PANEL_H = 199.5;
 export const STUD_W = 4.8; // 48 mm, stendere og sviller 48 × 98
 export const STUD_D = 9.8; // 98 mm
 export const RAFTER_W = 4.8; // sperrer 48 × 148
@@ -15,10 +15,10 @@ export const POST_T = 4.8;
 export const STRIP_W = 4.5; // klemmelist 21 × 45 over alle glasskanter
 export const STRIP_T = 2.1;
 
-export const WIDTH_MIN = 120;
-export const WIDTH_MAX = 720;
-export const LENGTH_MIN = 120;
-export const LENGTH_MAX = 1200;
+export const WIDTH_MIN = 2 * BAY;
+export const WIDTH_MAX = 6 * BAY;
+export const LENGTH_MIN = 2 * BAY;
+export const LENGTH_MAX = 10 * BAY;
 export const RIDGE_MIN = 240;
 export const RIDGE_MAX = 600;
 
@@ -38,7 +38,7 @@ export interface Params {
   length: number;
   ridge: number;
   bracing: Bracing;
-  glassPrice: number; // kr per panel 60 × 210
+  glassPrice: number; // kr per panel 125,2 × 199,5
   woodPrice: number; // kr per meter 48 × 98
   rafterPrice: number; // kr per meter 48 × 148
   beamPrice: number; // kr per meter limtre 140 × 315
@@ -48,8 +48,8 @@ export interface Params {
 }
 
 export const DEFAULT_PARAMS: Params = {
-  width: 300,
-  length: 480,
+  width: 2 * BAY,
+  length: 4 * BAY,
   ridge: 290,
   bracing: 'tre',
   glassPrice: 650,
@@ -77,7 +77,7 @@ export interface Model {
   nW: number; // antall fag på kortside
   nL: number; // antall fag på langside
   halfW: number;
-  rise: number; // mønehøyde − 210
+  rise: number; // mønehøyde − vegghøyde
   slopeLen: number; // sperrelengde
   angle: number; // takvinkel (rad)
   angleDeg: number;
@@ -102,7 +102,7 @@ export interface Model {
   roofBraceDepth: number; // fra overkant tak ned til senter av avstivningen, langs normalen
 }
 
-/** Deler ett fag av taket i glass langs takfallet: hele paneler à 210 fra raften, og en rest øverst mot mønet. */
+/** Deler ett fag av taket i glass langs takfallet: hele paneler à 199,5 fra raften, og en rest øverst mot mønet. */
 export function roofPieces(slopeLen: number): number[] {
   const full = Math.floor(slopeLen / PANEL_H);
   const rest = slopeLen - full * PANEL_H;
@@ -112,7 +112,7 @@ export function roofPieces(slopeLen: number): number[] {
 }
 
 export const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v));
-export const snap = (v: number) => Math.round(v / BAY) * BAY;
+export const snap = (v: number) => Math.round(Math.round(v / BAY) * BAY * 10) / 10;
 
 /** Antall fag hvert hjørnefelt med avstivning spenner over i et plan med n fag. */
 export const braceBays = (n: number) => Math.max(1, Math.min(2, Math.floor(n / 2)));
@@ -129,7 +129,7 @@ function cornerBrace(x0: number, xFar: number, y0: number, y1: number, w: number
 }
 
 /**
- * Avstivning i et plan med n fag à 60, fra svill/raft (y0) til overkant (y1), i planets koordinater:
+ * Avstivning i et plan med n fag à 125,2, fra svill/raft (y0) til overkant (y1), i planets koordinater:
  * én diagonal fra hvert hjørne, stigende inn mot midten. Samme oppsett for skråstag i tre og stålbånd.
  * inset er avstanden fra planets ende inn til hjørnet avstivningen starter i.
  */
@@ -257,7 +257,7 @@ export interface Materials {
 }
 
 export function computeMaterials(m: Model): Materials {
-  // Glass – ett panel 60 × 210 per fag i vegg; gavltrekant og tak tilpasses fra hele paneler.
+  // Glass – ett panel 125,2 × 199,5 per fag i vegg; gavltrekant og tak tilpasses fra hele paneler.
   const glassLongWalls = 2 * m.nL;
   const glassGableLower = 2 * m.nW;
   let tri = 0;

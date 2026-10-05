@@ -39,7 +39,7 @@ export function GableDrawing({ m }: { m: Model }) {
       <Rect c={c} x={W - STUD_D} y={STUD_W} w={STUD_D} h={WALL_H - 2 * STUD_W} kind="wood" />
       <Rect c={c} x={0} y={WALL_H - STUD_W} w={STUD_D} h={STUD_W} kind="wood" />
       <Rect c={c} x={W - STUD_D} y={WALL_H - STUD_W} w={STUD_D} h={STUD_W} kind="wood" />
-      {/* gavlstendere c/c 60 opp til sperre */}
+      {/* gavlstendere c/c 125,2 opp til sperre */}
       {gableStuds.map(([x0, x1], j) => {
         const [t0, t1] = gableStudTops(m, x0, x1);
         return <Poly key={j} c={c} pts={[[x0, STUD_W], [x1, STUD_W], [x1, t1], [x0, t0]]} kind="wood" />;
@@ -54,11 +54,11 @@ export function GableDrawing({ m }: { m: Model }) {
       <Poly c={c} pts={[[0, 0], [0, WALL_H], [halfW, ridge], [W, WALL_H], [W, 0]]} kind="outline" />
       <Line c={c} x1={-1.5 * k} y1={0} x2={W + 1.5 * k} y2={0} kind="ground" />
       {/* mål */}
-      <DimH c={c} x1={0} x2={BAY} yObj={0} yDim={-2.5 * k} label="c/c 60" />
+      <DimH c={c} x1={0} x2={BAY} yObj={0} yDim={-2.5 * k} label={`c/c ${n1(BAY)}`} />
       <DimH c={c} x1={0} x2={W} yObj={0} yDim={-5.5 * k} label={`${W}`} />
-      <DimV c={c} y1={0} y2={WALL_H} xObj={0} xDim={-2.5 * k} label={`${WALL_H}`} />
+      <DimV c={c} y1={0} y2={WALL_H} xObj={0} xDim={-2.5 * k} label={n1(WALL_H)} />
       <DimV c={c} y1={0} y2={ridge} xObj={0} xDim={-5.5 * k} label={`${ridge}`} />
-      <DimV c={c} y1={WALL_H} y2={ridge} xObj={W} xDim={W + 2.5 * k} label={`${rise}`} />
+      <DimV c={c} y1={WALL_H} y2={ridge} xObj={W} xDim={W + 2.5 * k} label={n1(rise)} />
       {/* takside raft–møne, og glassdeler langs takfallet */}
       <DimAlong c={c} p1={[0, WALL_H]} p2={[halfW, ridge]} offset={roofDim} label={n0(slopeLen)} />
       {roofPieces.length > 1 &&

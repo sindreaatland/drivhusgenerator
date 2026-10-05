@@ -84,7 +84,7 @@ function beams(m: Model): BeamSpec[] {
   // Mønedrager i limtre, sperrene hviler på kantene
   out.push({ size: [L, BEAM_H, BEAM_W], position: [L / 2, beamTop - BEAM_H / 2, halfW] });
 
-  // Sperrer c/c 60, overkant følger taklinjen fra (z=0, y=210) til (z=W/2, y=mønehøyde)
+  // Sperrer c/c 125,2, overkant følger taklinjen fra (z=0, y=199,5) til (z=W/2, y=mønehøyde)
   const dz = halfW / slopeLen;
   const dy = rise / slopeLen;
   const my = (WALL_H + ridge) / 2;
