@@ -9,6 +9,7 @@ const KEYS = {
   ridge: 'mone',
   bracing: 'avstivning',
   glassPrice: 'glass',
+  wallGlassPrice: 'vegglass',
   woodPrice: 'virke',
   rafterPrice: 'sperre',
   beamPrice: 'drager',
@@ -37,6 +38,8 @@ export function paramsFromSearch(search: string): Params {
   if (bracing !== undefined && (BRACINGS as readonly string[]).includes(bracing)) p.bracing = bracing as Bracing;
   const glass = num(KEYS.glassPrice);
   if (glass !== null) p.glassPrice = Math.max(0, glass);
+  const wallGlass = num(KEYS.wallGlassPrice);
+  if (wallGlass !== null) p.wallGlassPrice = Math.max(0, wallGlass);
   const wood = num(KEYS.woodPrice);
   if (wood !== null) p.woodPrice = Math.max(0, wood);
   const rafter = num(KEYS.rafterPrice);
@@ -59,6 +62,7 @@ export function searchFromParams(p: Params): string {
   q.set(KEYS.ridge, String(p.ridge));
   q.set(KEYS.bracing, p.bracing);
   q.set(KEYS.glassPrice, String(p.glassPrice));
+  q.set(KEYS.wallGlassPrice, String(p.wallGlassPrice));
   q.set(KEYS.woodPrice, String(p.woodPrice));
   q.set(KEYS.rafterPrice, String(p.rafterPrice));
   q.set(KEYS.beamPrice, String(p.beamPrice));

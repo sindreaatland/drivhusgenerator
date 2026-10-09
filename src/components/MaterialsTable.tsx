@@ -1,4 +1,4 @@
-import { kr, n0, n1, type Materials, type Model, type Params } from '../model';
+import { PANEL_H, ROOF_GLASS_W, STUDS_PER_BAY, WALL_GLASS_W, kr, n0, n1, type Materials, type Model, type Params } from '../model';
 
 function Row({
   name, qty, amount, price, className, showPrice,
@@ -16,7 +16,9 @@ function Row({
 }
 
 export function MaterialsTable({ m, mat, params }: { m: Model; mat: Materials; params: Params }) {
-  const glassSum = mat.glassCount * params.glassPrice;
+  const roofGlassSum = mat.glassRoof * params.glassPrice;
+  const wallGlassSum = mat.glassWall * params.wallGlassPrice;
+  const glassSum = roofGlassSum + wallGlassSum;
   const woodSum = mat.woodM * params.woodPrice;
   const heavySum = mat.heavyM * params.rafterPrice;
   const beamSum = mat.ridgeM * params.beamPrice;
@@ -40,10 +42,7 @@ export function MaterialsTable({ m, mat, params }: { m: Model; mat: Materials; p
           </tr>
         </thead>
         <tbody>
-          <tr className="section"><th colSpan={cols}>Glass 125,2 × 199,5 cm</th></tr>
-          <Row showPrice={showPrice} name="Langvegger" qty={`${mat.glassLongWalls} stk`} amount={`${2 * m.nL} fag`} />
-          <Row showPrice={showPrice} name="Gavlvegger under 199,5 cm" qty={`${mat.glassGableLower} stk`} amount={`${2 * m.nW} fag`} />
-          <Row showPrice={showPrice} name="Gavltrekanter (tilpasses)" qty={`${mat.glassGableTri} stk`} amount={`${n1(m.rise)} cm høyde i møne`} />
+          <tr className="section"><th colSpan={cols}>Takglass {n0(ROOF_GLASS_W)} × {n1(PANEL_H)} cm</th></tr>
           <Row
             showPrice={showPrice}
             name="Tak (tilpasses)"
@@ -52,10 +51,23 @@ export function MaterialsTable({ m, mat, params }: { m: Model; mat: Materials; p
           />
           <Row
             className="sum"
-            name="Sum glass"
-            qty={`${mat.glassCount} stk`}
-            amount={showPrice ? `${n1(mat.glassArea)} m² · ${kr(params.glassPrice)}/stk` : `${n1(mat.glassArea)} m²`}
-            price={kr(glassSum)}
+            name="Sum takglass"
+            qty={`${mat.glassRoof} stk`}
+            amount={showPrice ? `${n1(mat.glassRoofArea)} m² · ${kr(params.glassPrice)}/stk` : `${n1(mat.glassRoofArea)} m²`}
+            price={kr(roofGlassSum)}
+            showPrice={showPrice}
+          />
+
+          <tr className="section"><th colSpan={cols}>Veggglass {n0(WALL_GLASS_W)} × {n1(PANEL_H)} cm</th></tr>
+          <Row showPrice={showPrice} name="Langvegger" qty={`${mat.glassLongWalls} stk`} amount={`${2 * m.nL} fag à ${STUDS_PER_BAY} glass`} />
+          <Row showPrice={showPrice} name={`Gavlvegger under ${n1(PANEL_H)} cm`} qty={`${mat.glassGableLower} stk`} amount={`${2 * m.nW} fag à ${STUDS_PER_BAY} glass`} />
+          <Row showPrice={showPrice} name="Gavltrekanter (tilpasses)" qty={`${mat.glassGableTri} stk`} amount={`${n1(m.rise)} cm høyde i møne`} />
+          <Row
+            className="sum"
+            name="Sum veggglass"
+            qty={`${mat.glassWall} stk`}
+            amount={showPrice ? `${n1(mat.glassWallArea)} m² · ${kr(params.wallGlassPrice)}/stk` : `${n1(mat.glassWallArea)} m²`}
+            price={kr(wallGlassSum)}
             showPrice={showPrice}
           />
 

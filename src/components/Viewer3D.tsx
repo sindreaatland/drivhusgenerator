@@ -48,7 +48,7 @@ function Beam({ size, position, quat = IDENTITY, kind = 'wood', material }: Beam
 }
 
 function beams(m: Model): BeamSpec[] {
-  const { W, L, ridge, nL, halfW, rise, slopeLen, angle, beamTop, postTop } = m;
+  const { W, L, ridge, nL, wallBaysL, halfW, rise, slopeLen, angle, beamTop, postTop } = m;
   const out: BeamSpec[] = [];
 
   // Bunnsviller (ligger flatt) og toppsviller på langveggene
@@ -59,10 +59,10 @@ function beams(m: Model): BeamSpec[] {
   out.push({ size: [L, STUD_W, STUD_D], position: [L / 2, WALL_H - STUD_W / 2, STUD_D / 2] });
   out.push({ size: [L, STUD_W, STUD_D], position: [L / 2, WALL_H - STUD_W / 2, W - STUD_D / 2] });
 
-  // Stendere langvegger
+  // Stendere langvegger c/c 62,9
   const sh = WALL_H - 2 * STUD_W;
-  for (let i = 0; i <= nL; i++) {
-    const [x0, x1] = studSpan(i, nL, L);
+  for (let i = 0; i <= wallBaysL; i++) {
+    const [x0, x1] = studSpan(i, wallBaysL, L);
     const cx = (x0 + x1) / 2;
     out.push({ size: [STUD_W, sh, STUD_D], position: [cx, STUD_W + sh / 2, STUD_D / 2] });
     out.push({ size: [STUD_W, sh, STUD_D], position: [cx, STUD_W + sh / 2, W - STUD_D / 2] });
@@ -84,7 +84,7 @@ function beams(m: Model): BeamSpec[] {
   // Mønedrager i limtre, sperrene hviler på kantene
   out.push({ size: [L, BEAM_H, BEAM_W], position: [L / 2, beamTop - BEAM_H / 2, halfW] });
 
-  // Sperrer c/c 125,2, overkant følger taklinjen fra (z=0, y=199,5) til (z=W/2, y=mønehøyde)
+  // Sperrer c/c 125,8, overkant følger taklinjen fra (z=0, y=199,5) til (z=W/2, y=mønehøyde)
   const dz = halfW / slopeLen;
   const dy = rise / slopeLen;
   const my = (WALL_H + ridge) / 2;
@@ -130,17 +130,17 @@ function beams(m: Model): BeamSpec[] {
 
 /** Klemmelister 21 × 45 utenpå glasset: over stendere og sviller på langveggene, bare vertikalt fra bunn til overkant tak på gavlene, og over sperrer, raft, møne og skjøter på taket. */
 function strips(m: Model): BeamSpec[] {
-  const { W, L, nL, halfW, slopeLen, angle, roofPieces, gableStuds } = m;
+  const { W, L, nL, wallBaysL, halfW, slopeLen, angle, roofPieces, gableStuds } = m;
   const out: BeamSpec[] = [];
   const kind: BeamKind = 'strip';
   const t = STRIP_T;
   const w = STRIP_W;
   const off = 0.3 + t / 2; // glasset ligger 0.3 utenfor stenderne
 
-  // Langvegger: stendere, bunnsvill og toppsvill
+  // Langvegger: stendere c/c 62,9, bunnsvill og toppsvill
   for (const z of [-off, W + off]) {
-    for (let i = 0; i <= nL; i++) {
-      const [x0, x1] = studSpan(i, nL, L);
+    for (let i = 0; i <= wallBaysL; i++) {
+      const [x0, x1] = studSpan(i, wallBaysL, L);
       out.push({ size: [w, WALL_H, t], position: [(x0 + x1) / 2, WALL_H / 2, z], kind });
     }
     out.push({ size: [L, w, t], position: [L / 2, w / 2, z], kind });

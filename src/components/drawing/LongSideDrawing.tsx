@@ -1,8 +1,8 @@
-import { BAY, BEAM_H, STUD_W, WALL_H, bracePoly, n1, studSpan, type Model } from '../../model';
+import { BAY, BEAM_H, STUD_W, WALL_BAY, WALL_H, bracePoly, n1, studSpan, type Model } from '../../model';
 import { COLORS, DimH, DimV, Line, Poly, Rect, Text, f, makeCtx } from './svg';
 
 export function LongSideDrawing({ m }: { m: Model }) {
-  const { L, ridge, nL, rise, angle, roofPieces, beamBottom, bracing, braceW, wallBracesLong, roofBraces, roofBraceDepth } = m;
+  const { L, ridge, nL, wallBaysL, rise, angle, roofPieces, beamBottom, bracing, braceW, wallBracesLong, roofBraces, roofBraceDepth } = m;
   const braceKind = bracing === 'stal' ? 'steel' : 'wood';
   const roofBraceKind = bracing === 'stal' ? 'steelFaint' : 'woodFaint';
   // Avstivning i takplanet projisert i høyde sett fra siden
@@ -11,9 +11,10 @@ export function LongSideDrawing({ m }: { m: Model }) {
   const c = makeCtx(k);
   const padL = 8 * k;
   const padR = 5 * k;
-  const padT = 1.5 * k;
+  const padT = 4.5 * k;
   const padB = 8.5 * k;
-  const studs = Array.from({ length: nL + 1 }, (_, i) => studSpan(i, nL, L));
+  const studs = Array.from({ length: wallBaysL + 1 }, (_, i) => studSpan(i, wallBaysL, L));
+  const rafters = Array.from({ length: nL + 1 }, (_, i) => studSpan(i, nL, L));
   // Skjøter mellom glassdeler langs takfallet, projisert i høyde sett fra siden
   const joints = roofPieces.slice(0, -1).map((_, i) => WALL_H + roofPieces.slice(0, i + 1).reduce((a, b) => a + b, 0) * Math.sin(angle));
 
@@ -42,19 +43,20 @@ export function LongSideDrawing({ m }: { m: Model }) {
       {wallBracesLong.map((br, i) => (
         <Poly key={i} c={c} pts={bracePoly(br, braceW)} kind={braceKind} />
       ))}
-      {/* stendere og sperrer c/c 125,2 */}
+      {/* stendere c/c 62,9 (veggglass 61) og sperrer c/c 125,8 (takglass 125) */}
       {studs.map(([x0, x1], i) => (
-        <g key={i}>
-          <Rect c={c} x={x0} y={STUD_W} w={x1 - x0} h={WALL_H - 2 * STUD_W} kind="wood" />
-          <Rect c={c} x={x0} y={WALL_H} w={x1 - x0} h={rise} kind="wood" />
-        </g>
+        <Rect key={`s${i}`} c={c} x={x0} y={STUD_W} w={x1 - x0} h={WALL_H - 2 * STUD_W} kind="wood" />
+      ))}
+      {rafters.map(([x0, x1], i) => (
+        <Rect key={`r${i}`} c={c} x={x0} y={WALL_H} w={x1 - x0} h={rise} kind="wood" />
       ))}
       <Rect c={c} x={0} y={0} w={L} h={ridge} kind="outline" />
       <Line c={c} x1={0} y1={WALL_H} x2={L} y2={WALL_H} kind="outline" />
       <Line c={c} x1={-1.5 * k} y1={0} x2={L + 1.5 * k} y2={0} kind="ground" />
       {/* mål */}
-      <DimH c={c} x1={0} x2={BAY} yObj={0} yDim={-2.5 * k} label={`c/c ${n1(BAY)}`} />
+      <DimH c={c} x1={0} x2={WALL_BAY} yObj={0} yDim={-2.5 * k} label={`c/c ${n1(WALL_BAY)}`} />
       <DimH c={c} x1={0} x2={L} yObj={0} yDim={-5.5 * k} label={`${L}`} />
+      <DimH c={c} x1={0} x2={BAY} yObj={ridge} yDim={ridge + 2.5 * k} label={`c/c ${n1(BAY)}`} />
       <DimV c={c} y1={0} y2={WALL_H} xObj={0} xDim={-2.5 * k} label={n1(WALL_H)} />
       <DimV c={c} y1={0} y2={ridge} xObj={0} xDim={-5.5 * k} label={`${ridge}`} />
       <DimV c={c} y1={WALL_H} y2={ridge} xObj={L} xDim={L + 2.5 * k} label={n1(rise)} />

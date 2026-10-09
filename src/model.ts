@@ -1,9 +1,5 @@
 // Alle mål i cm.
 
-export const BAY = 125.2; // senteravstand stendere = bredde på glass
-export const WALL_H = 199.5; // vegghøyde langside = høyde på glass
-export const PANEL_W = 125.2;
-export const PANEL_H = 199.5;
 export const STUD_W = 4.8; // 48 mm, stendere og sviller 48 × 98
 export const STUD_D = 9.8; // 98 mm
 export const RAFTER_W = 4.8; // sperrer 48 × 148
@@ -14,6 +10,22 @@ export const POST_W = 14.8; // stolpe 48 × 148 under mønedrageren i hver gavl,
 export const POST_T = 4.8;
 export const STRIP_W = 4.5; // klemmelist 21 × 45 over alle glasskanter
 export const STRIP_T = 2.1;
+
+// Glass. Taket har glass på 125 cm bredde som hviler på sperrene, veggene har glass på 61 cm som hviler på stenderne.
+// Sperrene står c/c 125,8, så takglasset hviler 2,0 cm på hver sperre. Stenderne står c/c 62,9 (to glass per fag),
+// og da hviler veggglasset 1,45 cm på hver stender. Med 2,0 cm også i veggen hadde to veggglass bare gitt c/c 123,6
+// på sperrene, så det er opplegget i veggen som må gi seg.
+export const ROOF_GLASS_W = 125; // takglass, bredde på tvers av sperrene
+export const WALL_GLASS_W = 61; // veggglass, bredde mellom stenderne
+export const PANEL_H = 199.5; // høyde på både tak- og veggglass
+export const BAY = 125.8; // senteravstand sperrer = ett fag
+export const STUDS_PER_BAY = 2; // stendere c/c halve faget, ett veggglass per felt
+export const WALL_BAY = BAY / STUDS_PER_BAY; // senteravstand stendere = 62,9
+export const WALL_H = PANEL_H; // vegghøyde langside = høyde på glass
+export const ROOF_BEARING = (ROOF_GLASS_W - (BAY - RAFTER_W)) / 2; // takglasset hviler 2,0 cm på hver sperre
+export const WALL_BEARING = (WALL_GLASS_W - (WALL_BAY - STUD_W)) / 2; // veggglasset hviler 1,45 cm på hver stender
+export const ROOF_GAP = RAFTER_W - 2 * ROOF_BEARING; // 0,8 cm mellom to takglass på samme sperre
+export const WALL_GAP = STUD_W - 2 * WALL_BEARING; // 1,9 cm mellom to veggglass på samme stender
 
 export const WIDTH_MIN = 2 * BAY;
 export const WIDTH_MAX = 6 * BAY;
@@ -38,7 +50,8 @@ export interface Params {
   length: number;
   ridge: number;
   bracing: Bracing;
-  glassPrice: number; // kr per panel 125,2 × 199,5
+  glassPrice: number; // kr per takglass 125 × 199,5
+  wallGlassPrice: number; // kr per veggglass 61 × 199,5
   woodPrice: number; // kr per meter 48 × 98
   rafterPrice: number; // kr per meter 48 × 148
   beamPrice: number; // kr per meter limtre 140 × 315
@@ -53,6 +66,7 @@ export const DEFAULT_PARAMS: Params = {
   ridge: 290,
   bracing: 'tre',
   glassPrice: 650,
+  wallGlassPrice: 350,
   woodPrice: 39,
   rafterPrice: 59,
   beamPrice: 750,
@@ -74,8 +88,10 @@ export interface Model {
   W: number;
   L: number;
   ridge: number;
-  nW: number; // antall fag på kortside
+  nW: number; // antall fag (sperreavstander) på kortside
   nL: number; // antall fag på langside
+  wallBaysW: number; // antall felt mellom stendere på kortside, to per fag
+  wallBaysL: number; // antall felt mellom stendere på langside
   halfW: number;
   rise: number; // mønehøyde − vegghøyde
   slopeLen: number; // sperrelengde
@@ -102,7 +118,7 @@ export interface Model {
   roofBraceDepth: number; // fra overkant tak ned til senter av avstivningen, langs normalen
 }
 
-/** Deler ett fag av taket i glass langs takfallet: hele paneler à 199,5 fra raften, og en rest øverst mot mønet. */
+/** Deler ett fag av taket i glass langs takfallet: hele takglass à 199,5 fra raften, og en rest øverst mot mønet. */
 export function roofPieces(slopeLen: number): number[] {
   const full = Math.floor(slopeLen / PANEL_H);
   const rest = slopeLen - full * PANEL_H;
@@ -129,7 +145,7 @@ function cornerBrace(x0: number, xFar: number, y0: number, y1: number, w: number
 }
 
 /**
- * Avstivning i et plan med n fag à 125,2, fra svill/raft (y0) til overkant (y1), i planets koordinater:
+ * Avstivning i et plan med n fag à 125,8, fra svill/raft (y0) til overkant (y1), i planets koordinater:
  * én diagonal fra hvert hjørne, stigende inn mot midten. Samme oppsett for skråstag i tre og stålbånd.
  * inset er avstanden fra planets ende inn til hjørnet avstivningen starter i.
  */
@@ -172,6 +188,8 @@ export function braceLen(br: Brace, w: number): number {
 export function buildModel(W: number, L: number, ridge: number, bracing: Bracing): Model {
   const nW = Math.round(W / BAY);
   const nL = Math.round(L / BAY);
+  const wallBaysW = STUDS_PER_BAY * nW;
+  const wallBaysL = STUDS_PER_BAY * nL;
   const halfW = W / 2;
   const rise = ridge - WALL_H;
   const slopeLen = Math.hypot(halfW, rise);
@@ -181,7 +199,7 @@ export function buildModel(W: number, L: number, ridge: number, bracing: Bracing
   const beamTop = ridge - tv - (BEAM_W / 2) * Math.tan(angle);
   const beamBottom = beamTop - BEAM_H;
   const post: [number, number] = [halfW - POST_W / 2, halfW + POST_W / 2];
-  const gableStuds = Array.from({ length: Math.max(0, nW - 1) }, (_, j) => studSpan(j + 1, nW, W))
+  const gableStuds = Array.from({ length: Math.max(0, wallBaysW - 1) }, (_, j) => studSpan(j + 1, wallBaysW, W))
     .filter(([z0, z1]) => z1 < post[0] || z0 > post[1]);
   const roofTop = (z: number) => WALL_H + rise * (1 - Math.abs(z - halfW) / halfW);
   const roofUnder = (z: number) => Math.max(WALL_H, roofTop(z) - tv);
@@ -196,7 +214,7 @@ export function buildModel(W: number, L: number, ridge: number, bracing: Bracing
   const roofBraces = planeBraces(bracing, nL, 0, sA, sB, braceW);
 
   return {
-    W, L, ridge, nW, nL, halfW, rise, slopeLen, angle,
+    W, L, ridge, nW, nL, wallBaysW, wallBaysL, halfW, rise, slopeLen, angle,
     angleDeg: (angle * 180) / Math.PI,
     tv, seatX, beamTop, beamBottom, gableStuds, post, postTop: beamBottom,
     roofPieces: roofPieces(slopeLen), roofTop, roofUnder,
@@ -206,11 +224,15 @@ export function buildModel(W: number, L: number, ridge: number, bracing: Bracing
   };
 }
 
-/** Utstrekning [fra, til] for stender nr. i av n fag langs en vegg med lengde len. Hjørnestendere ligger flush. */
+/**
+ * Utstrekning [fra, til] for stender eller sperre nr. i av n like felt langs en vegg med lengde len.
+ * Hjørnestendere ligger flush. n er fag (sperrer, c/c 125,8) eller felt (stendere, c/c 62,9).
+ */
 export function studSpan(i: number, n: number, len: number): [number, number] {
   if (i === 0) return [0, STUD_W];
   if (i === n) return [len - STUD_W, len];
-  return [i * BAY - STUD_W / 2, i * BAY + STUD_W / 2];
+  const cx = (i * len) / n;
+  return [cx - STUD_W / 2, cx + STUD_W / 2];
 }
 
 /** Topp på gavlstender (venstre og høyre kant), opp til underkant sperre. */
@@ -219,11 +241,14 @@ export function gableStudTops(m: Model, z0: number, z1: number): [number, number
 }
 
 export interface Materials {
-  glassLongWalls: number;
+  glassLongWalls: number; // veggglass 61 × 199,5
   glassGableLower: number;
   glassGableTri: number;
+  glassWall: number; // veggglass totalt
+  glassWallArea: number; // m²
   glassRoofPerBay: number;
-  glassRoof: number;
+  glassRoof: number; // takglass 125 × 199,5
+  glassRoofArea: number; // m²
   glassCount: number;
   glassArea: number; // m²
   studLen: number; // cm, stender langvegg mellom sviller
@@ -257,27 +282,30 @@ export interface Materials {
 }
 
 export function computeMaterials(m: Model): Materials {
-  // Glass – ett panel 125,2 × 199,5 per fag i vegg; gavltrekant og tak tilpasses fra hele paneler.
-  const glassLongWalls = 2 * m.nL;
-  const glassGableLower = 2 * m.nW;
+  // Glass – ett veggglass 61 × 199,5 per felt mellom stenderne, ett takglass 125 × 199,5 per fag langs takfallet.
+  // Gavltrekantene og øverste del av taket tilpasses fra hele glass.
+  const glassLongWalls = 2 * m.wallBaysL;
+  const glassGableLower = 2 * m.wallBaysW;
   let tri = 0;
-  for (let i = 0; i < m.nW; i++) {
-    const z0 = i * BAY;
-    const z1 = z0 + BAY;
+  for (let i = 0; i < m.wallBaysW; i++) {
+    const z0 = i * WALL_BAY;
+    const z1 = z0 + WALL_BAY;
     const straddles = z0 < m.halfW && z1 > m.halfW;
     const hMax = straddles ? m.rise : Math.max(m.roofTop(z0), m.roofTop(z1)) - WALL_H;
     tri += Math.ceil(hMax / PANEL_H);
   }
   const glassGableTri = 2 * tri;
+  const glassWall = glassLongWalls + glassGableLower + glassGableTri;
+  const glassWallArea = (2 * m.L * WALL_H + 2 * m.W * WALL_H + m.W * m.rise) / 1e4;
   const glassRoofPerBay = m.roofPieces.length;
   const glassRoof = 2 * m.nL * glassRoofPerBay;
-  const glassCount = glassLongWalls + glassGableLower + glassGableTri + glassRoof;
-  const glassArea =
-    (2 * m.L * WALL_H + 2 * m.W * WALL_H + m.W * m.rise + 2 * m.L * m.slopeLen) / 1e4;
+  const glassRoofArea = (2 * m.L * m.slopeLen) / 1e4;
+  const glassCount = glassWall + glassRoof;
+  const glassArea = glassWallArea + glassRoofArea;
 
   // Konstruksjonsvirke 48 × 98 i veggene, 48 × 148 i sperrene, limtredrager i mønet
   const studLen = WALL_H - 2 * STUD_W;
-  const longStuds = 2 * (m.nL + 1);
+  const longStuds = 2 * (m.wallBaysL + 1);
   const longStudM = (longStuds * studLen) / 100;
   const gableTops = m.gableStuds.map(([z0, z1]) => Math.min(...gableStudTops(m, z0, z1)));
   const gableStudLens = gableTops.map((t) => t - STUD_W);
@@ -308,14 +336,15 @@ export function computeMaterials(m: Model): Materials {
   // Klemmelist: én list der to glass møtes på samme stender. Langvegger og tak har også lister langs kantene,
   // gavlene har bare vertikale lister fra bunnsvill helt opp til overkant tak, over gavlsperren.
   const sum = (xs: number[]) => xs.reduce((a, b) => a + b, 0);
-  const stripLongM = (2 * ((m.nL + 1) * WALL_H + 2 * m.L)) / 100; // stendere, bunnsvill og toppsvill
+  const stripLongM = (2 * ((m.wallBaysL + 1) * WALL_H + 2 * m.L)) / 100; // stendere, bunnsvill og toppsvill
   const gableStripZ = [...m.gableStuds.map(([z0, z1]) => (z0 + z1) / 2), STUD_D / 2, m.W - STUD_D / 2, m.halfW]; // stendere, hjørner, midt på stolpen
   const stripGableM = (2 * sum(gableStripZ.map((z) => m.roofTop(z)))) / 100;
   const stripRoofM = (2 * ((m.nL + 1) * m.slopeLen + (1 + m.roofPieces.length) * m.L)) / 100; // sperrer, raft, møne og skjøter langs takfallet
   const stripM = stripLongM + stripGableM + stripRoofM;
 
   return {
-    glassLongWalls, glassGableLower, glassGableTri, glassRoofPerBay, glassRoof, glassCount, glassArea,
+    glassLongWalls, glassGableLower, glassGableTri, glassWall, glassWallArea,
+    glassRoofPerBay, glassRoof, glassRoofArea, glassCount, glassArea,
     studLen, longStuds, longStudM, gableStuds, gableStudLens, gableStudM,
     rafters, rafterM, posts, postLen, postM, heavyM, ridgeM, plateM,
     stripLongM, stripGableM, stripRoofM, stripM,
@@ -326,6 +355,8 @@ export function computeMaterials(m: Model): Materials {
 
 const nf0 = new Intl.NumberFormat('nb-NO', { maximumFractionDigits: 0 });
 const nf1 = new Intl.NumberFormat('nb-NO', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+const nf01 = new Intl.NumberFormat('nb-NO', { maximumFractionDigits: 1 });
 export const n0 = (v: number) => nf0.format(v);
 export const n1 = (v: number) => nf1.format(v);
+export const n01 = (v: number) => nf01.format(v); // inntil én desimal, bare når det trengs
 export const kr = (v: number) => `${nf0.format(Math.round(v))} kr`;

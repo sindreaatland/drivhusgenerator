@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState, type ChangeEvent } from 'react';
 import { shareUrl } from '../urlState';
 import {
-  BAY, LENGTH_MAX, LENGTH_MIN, RIDGE_MAX, RIDGE_MIN, WALL_H, WIDTH_MAX, WIDTH_MIN,
-  braceAngleDeg, clamp, n0, n1, snap, type Bracing, type Model, type Params,
+  BAY, LENGTH_MAX, LENGTH_MIN, PANEL_H, RIDGE_MAX, RIDGE_MIN, ROOF_BEARING, ROOF_GAP, ROOF_GLASS_W,
+  WALL_BAY, WALL_BEARING, WALL_GAP, WALL_GLASS_W, WALL_H, WIDTH_MAX, WIDTH_MIN,
+  braceAngleDeg, clamp, n0, n01, n1, snap, type Bracing, type Model, type Params,
 } from '../model';
 
 const BRACING_OPTIONS: { value: Bracing; label: string; hint: string }[] = [
@@ -172,6 +173,22 @@ export function Controls({ params, model, onChange }: { params: Params; model: M
             </dd>
           </div>
         </dl>
+        <dl className="facts facts-list">
+          <div>
+            <dt>Takglass {n0(ROOF_GLASS_W)} × {n1(PANEL_H)} cm</dt>
+            <dd>
+              Sperrer c/c {n1(BAY)} cm
+              <span className="muted"> · hviler {n01(10 * ROOF_BEARING)} mm på hver sperre, {n01(10 * ROOF_GAP)} mm mellom glassene</span>
+            </dd>
+          </div>
+          <div>
+            <dt>Veggglass {n0(WALL_GLASS_W)} × {n1(PANEL_H)} cm</dt>
+            <dd>
+              Stendere c/c {n1(WALL_BAY)} cm
+              <span className="muted"> · hviler {n01(10 * WALL_BEARING)} mm på hver stender, {n01(10 * WALL_GAP)} mm mellom glassene</span>
+            </dd>
+          </div>
+        </dl>
       </section>
       <section>
         <h2>Vindavstivning</h2>
@@ -202,8 +219,12 @@ export function Controls({ params, model, onChange }: { params: Params; model: M
         {params.showPrice ? (
           <>
             <div className="field">
-              <label className="field-label" htmlFor="glassPrice">Glass 125,2 × 199,5 cm</label>
+              <label className="field-label" htmlFor="glassPrice">Takglass {n0(ROOF_GLASS_W)} × {n1(PANEL_H)} cm</label>
               <NumberField id="glassPrice" value={params.glassPrice} min={0} max={1e6} unit="kr/stk" onCommit={(v) => set({ glassPrice: v })} />
+            </div>
+            <div className="field">
+              <label className="field-label" htmlFor="wallGlassPrice">Veggglass {n0(WALL_GLASS_W)} × {n1(PANEL_H)} cm</label>
+              <NumberField id="wallGlassPrice" value={params.wallGlassPrice} min={0} max={1e6} unit="kr/stk" onCommit={(v) => set({ wallGlassPrice: v })} />
             </div>
             <div className="field">
               <label className="field-label" htmlFor="woodPrice">Konstruksjonsvirke 48 × 98 (vegger)</label>
